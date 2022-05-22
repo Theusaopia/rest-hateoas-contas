@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.hateoas.RepresentationModel;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -11,7 +12,7 @@ import java.util.Date;
 @Entity @Getter
 @Setter
 @NoArgsConstructor
-public class Pagamento {
+public class Pagamento extends RepresentationModel<Pagamento> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

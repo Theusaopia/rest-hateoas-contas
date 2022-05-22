@@ -4,6 +4,9 @@ import br.edu.utfpr.rest_contas.domain.Pagamento;
 import br.edu.utfpr.rest_contas.services.ContaService;
 import br.edu.utfpr.rest_contas.services.PagamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -23,13 +26,36 @@ public class PagamentoResource {
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<Pagamento> listarPagamentoPorId(@PathVariable Integer id) {
         Pagamento obj = service.buscarPorId(id);
+
+        obj.add(
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(PagamentoResource.class)
+                        .listarPagamentoPorId(obj.getId())
+                ).withSelfRel());
+
+        obj.add(
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(PagamentoResource.class)
+                        .buscarTodos()
+                ).withRel(IanaLinkRelations.COLLECTION));
+
+        if(obj.getConta() != null) {
+            obj.getConta().add(
+                    WebMvcLinkBuilder
+                            .linkTo(WebMvcLinkBuilder.methodOn(ContaResource.class)
+                                    .listarContaPorId(obj.getConta().getId()))
+                            .withSelfRel()
+            );
+        }
+
         return ResponseEntity.ok().body(obj);
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Pagamento>> buscarTodos() {
-        List<Pagamento> pagamentos = service.buscarTodos();
-        return ResponseEntity.ok().body(pagamentos);
+    public CollectionModel<Pagamento> buscarTodos() {
+        return CollectionModel.of(service.buscarTodos()).add(
+                WebMvcLinkBuilder
+                        .linkTo(WebMvcLinkBuilder
+                                .methodOn(PagamentoResource.class)
+                                .buscarTodos()).withSelfRel());
     }
 
     @RequestMapping(method = RequestMethod.POST)
