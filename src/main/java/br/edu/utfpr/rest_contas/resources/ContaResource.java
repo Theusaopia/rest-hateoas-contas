@@ -5,6 +5,7 @@ package br.edu.utfpr.rest_contas.resources;
 import br.edu.utfpr.rest_contas.domain.Conta;
 import br.edu.utfpr.rest_contas.services.ContaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -25,8 +26,8 @@ public class ContaResource {
     public ResponseEntity<Conta> listarContaPorId(@PathVariable Integer id) {
         Conta obj = service.buscarPorId(id);
         obj.add(linkTo(methodOn(ContaResource.class).listarContaPorId(obj.getId())).withSelfRel());
-        obj.add(linkTo(methodOn(ContaResource.class).buscarTodos()).withRel("contas"));
-        obj.getCliente().add(linkTo(methodOn(ClienteResource.class).listarClientePorId(obj.getId())).withSelfRel());
+        obj.add(linkTo(methodOn(ContaResource.class).buscarTodos()).withRel(IanaLinkRelations.COLLECTION));
+        obj.getCliente().add(linkTo(methodOn(ClienteResource.class).listarClientePorId(obj.getCliente().getId())).withSelfRel());
         return ResponseEntity.ok().body(obj);
     }
 
@@ -36,7 +37,7 @@ public class ContaResource {
         for(Conta conta: contas){
             conta.add((linkTo(methodOn(ContaResource.class).buscarTodos()).withSelfRel()));
             conta.getCliente().add(
-                    linkTo(methodOn(ClienteResource.class).listarClientePorId(conta.getId())).withSelfRel()
+                    linkTo(methodOn(ClienteResource.class).listarClientePorId(conta.getCliente().getId())).withSelfRel()
             );
             conta.add(linkTo(methodOn(ContaResource.class).listarContaPorId(conta.getId())).withRel("conta"));
 
