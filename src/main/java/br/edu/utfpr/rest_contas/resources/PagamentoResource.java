@@ -14,6 +14,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @RestController
 @RequestMapping(value = "/pagamentos")
 public class PagamentoResource {
@@ -28,22 +31,23 @@ public class PagamentoResource {
         Pagamento obj = service.buscarPorId(id);
 
         obj.add(
-                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(PagamentoResource.class)
+                linkTo(methodOn(PagamentoResource.class)
                         .listarPagamentoPorId(obj.getId())
                 ).withSelfRel());
 
         obj.add(
-                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(PagamentoResource.class)
+                linkTo(methodOn(PagamentoResource.class)
                         .buscarTodos()
                 ).withRel(IanaLinkRelations.COLLECTION));
 
         if(obj.getConta() != null) {
             obj.getConta().add(
-                    WebMvcLinkBuilder
-                            .linkTo(WebMvcLinkBuilder.methodOn(ContaResource.class)
+                  linkTo(methodOn(ContaResource.class)
                                     .listarContaPorId(obj.getConta().getId()))
                             .withSelfRel()
             );
+
+            obj.getConta().getCliente().add(linkTo(methodOn(ClienteResource.class).listarClientePorId(obj.getConta().getCliente().getId())).withSelfRel());
         }
 
         return ResponseEntity.ok().body(obj);
@@ -51,10 +55,18 @@ public class PagamentoResource {
 
     @RequestMapping(method = RequestMethod.GET)
     public CollectionModel<Pagamento> buscarTodos() {
+        List<Pagamento> pagamentos = service.buscarTodos();
+
+        for(Pagamento pag : pagamentos) {
+            pag.add(linkTo(methodOn(PagamentoResource.class).listarPagamentoPorId(pag.getId())).withSelfRel());
+            if(pag.getConta() != null) {
+                pag.getConta().add(linkTo(methodOn(ContaResource.class).listarContaPorId(pag.getConta().getId())).withSelfRel());
+                pag.getConta().getCliente().add(linkTo(methodOn(ClienteResource.class).listarClientePorId(pag.getConta().getCliente().getId())).withSelfRel());
+            }
+        }
+
         return CollectionModel.of(service.buscarTodos()).add(
-                WebMvcLinkBuilder
-                        .linkTo(WebMvcLinkBuilder
-                                .methodOn(PagamentoResource.class)
+                linkTo(methodOn(PagamentoResource.class)
                                 .buscarTodos()).withSelfRel());
     }
 

@@ -4,8 +4,8 @@ import br.edu.utfpr.rest_contas.domain.Cliente;
 import br.edu.utfpr.rest_contas.services.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -25,8 +25,10 @@ public class ClienteResource {
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<Cliente> listarClientePorId(@PathVariable Integer id) {
         Cliente obj = service.buscarPorId(id);
+
         obj.add(linkTo(methodOn(ClienteResource.class).listarClientePorId(obj.getId())).withSelfRel());
-        obj.add(linkTo(methodOn(ClienteResource.class).buscarTodos()).withRel("clientes"));
+        obj.add(linkTo(methodOn(ClienteResource.class).buscarTodos()).withRel(IanaLinkRelations.COLLECTION));
+
         return ResponseEntity.ok().body(obj);
     }
 
@@ -36,7 +38,6 @@ public class ClienteResource {
 
         for (Cliente cliente : clientes) {
             cliente.add(linkTo(methodOn(ClienteResource.class).listarClientePorId(cliente.getId())).withSelfRel());
-
         }
         return CollectionModel.of(service.buscarTodos()).add(
                 WebMvcLinkBuilder
