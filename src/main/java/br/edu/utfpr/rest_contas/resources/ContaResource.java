@@ -12,6 +12,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @RestController
 @RequestMapping(value = "/contas")
 public class ContaResource {
@@ -21,12 +24,23 @@ public class ContaResource {
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<Conta> listarContaPorId(@PathVariable Integer id) {
         Conta obj = service.buscarPorId(id);
+        obj.add(linkTo(methodOn(ContaResource.class).listarContaPorId(obj.getId())).withSelfRel());
+        obj.add(linkTo(methodOn(ContaResource.class).buscarTodos()).withRel("contas"));
+        obj.getCliente().add(linkTo(methodOn(ClienteResource.class).listarClientePorId(obj.getId())).withSelfRel());
         return ResponseEntity.ok().body(obj);
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Conta>> buscarTodos() {
         List<Conta> contas = service.buscarTodos();
+        for(Conta conta: contas){
+            conta.add((linkTo(methodOn(ContaResource.class).buscarTodos()).withSelfRel()));
+            conta.getCliente().add(
+                    linkTo(methodOn(ClienteResource.class).listarClientePorId(conta.getId())).withSelfRel()
+            );
+            conta.add(linkTo(methodOn(ContaResource.class).listarContaPorId(conta.getId())).withRel("conta"));
+
+        }
         return ResponseEntity.ok().body(contas);
     }
 
